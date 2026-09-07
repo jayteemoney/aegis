@@ -1,0 +1,59 @@
+{
+  "name": "aegis",
+  "version": "0.1.0",
+  "description": "Privacy-preserving clinical-trial matching on Midnight",
+  "private": true,
+  "type": "module",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "compile": "compact compile contracts/aegis.compact contracts/managed/aegis && yarn zk:copy",
+    "zk:copy": "node scripts/copy-zk.mjs",
+    "compile:check": "compact compile --skip-zk contracts/aegis.compact contracts/managed/aegis-check",
+    "test": "NODE_OPTIONS='--experimental-vm-modules' vitest run",
+    "test:local": "MIDNIGHT_NETWORK=local yarn test",
+    "env:up": "docker compose up -d --wait",
+    "env:down": "docker compose down",
+    "proof:up": "docker compose up -d --wait proof-server",
+    "proof:down": "docker compose stop proof-server",
+    "deploy:local": "vite-node scripts/deploy.ts",
+    "patient": "vite-node scripts/patient.ts",
+    "utxos": "vite-node scripts/utxos.ts",
+    "demo": "yarn compile && yarn env:up && yarn deploy:local",
+    "validate": "yarn compile && yarn env:up && yarn test:local; yarn env:down"
+  },
+  "dependencies": {
+    "@midnight-ntwrk/midnight-js-contracts": "4.1.1",
+    "@midnight-ntwrk/midnight-js-http-client-proof-provider": "4.1.1",
+    "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "4.1.1",
+    "@midnight-ntwrk/midnight-js-level-private-state-provider": "4.1.1",
+    "@midnight-ntwrk/midnight-js-network-id": "4.1.1",
+    "@midnight-ntwrk/midnight-js-node-zk-config-provider": "4.1.1",
+    "@midnight-ntwrk/midnight-js-protocol": "4.1.1",
+    "@midnight-ntwrk/midnight-js-types": "4.1.1",
+    "@midnight-ntwrk/midnight-js-utils": "4.1.1",
+    "@midnight-ntwrk/testkit-js": "4.1.1",
+    "@midnight-ntwrk/wallet-sdk": "1.2.0",
+    "axios": "^1.15.0",
+    "pino": "^9.0.0",
+    "pino-pretty": "^13.0.0",
+    "rxjs": "^7.8.2",
+    "testcontainers": "^11.13.0",
+    "ws": "^8.14.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/ws": "^8.5.9",
+    "typescript": "^5.7.0",
+    "vite-node": "^6.0.0",
+    "vitest": "^4.1.0"
+  },
+  "resolutions": {
+    "@midnight-ntwrk/wallet-sdk": "1.2.0",
+    "@midnight-ntwrk/ledger-v8": "8.1.0",
+    "@midnight-ntwrk/onchain-runtime-v3": "3.0.0"
+  },
+  "packageManager": "yarn@1.22.22"
+}
