@@ -50,3 +50,10 @@ wallet-seed*
 .DS_Store
 .vscode/*
 !.vscode/extensions.json
+
+# ── hosting ────────────────────────────────────────────────────────────
+# Vercel's project link and the OIDC token it downloads. Appended by the
+# CLI, kept here rather than at the end of the file so its `.env` rule does
+# not silently override the example-file exceptions above.
+/.vercel
+.env.local
