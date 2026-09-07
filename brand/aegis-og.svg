@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <path id="s" d="M256 40 L436 112 v152 c0 106-74 176-180 208 C150 440 76 370 76 264 V112 Z"/>
+    <clipPath id="l"><rect x="0" y="0" width="256" height="512"/></clipPath>
+    <clipPath id="r"><rect x="256" y="0" width="256" height="512"/></clipPath>
+    <mask id="m">
+      <use href="#s" fill="#fff"/>
+      <path d="M256 168 L330 262 L256 356 L182 262 Z" fill="#000"/>
+      <path d="M256 214 L294 262 L256 310 L218 262 Z" fill="#fff"/>
+    </mask>
+  </defs>
+  <rect width="1200" height="630" fill="#080b10"/>
+  <circle cx="150" cy="90" r="320" fill="#f0b429" opacity="0.07"/>
+  <circle cx="1080" cy="560" r="340" fill="#4c9fff" opacity="0.08"/>
+
+  <g transform="translate(78,132) scale(0.52)" mask="url(#m)">
+    <g clip-path="url(#l)"><use href="#s" fill="#f0b429"/></g>
+    <g clip-path="url(#r)"><use href="#s" fill="#4c9fff"/></g>
+  </g>
+
+  <text x="360" y="252" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+        font-size="112" font-weight="700" letter-spacing="-4" fill="#e8eef6">Aegis</text>
+  <text x="364" y="318" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+        font-size="38" font-weight="600"><tspan fill="#f0b429">Prove you qualify.</tspan><tspan fill="#4c9fff" dx="14">Reveal nothing.</tspan></text>
+  <text x="364" y="392" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+        font-size="27" font-weight="400" fill="#8695a8">Zero-knowledge clinical-trial matching, built on Midnight.</text>
+  <text x="364" y="432" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+        font-size="27" font-weight="400" fill="#8695a8">Your health facts never leave your device.</text>
+</svg>
