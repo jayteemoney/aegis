@@ -1,0 +1,134 @@
+pragma language_version 0.23;
+
+import CompactStandardLibrary;
+
+// ── Public ledger state ────────────────────────────────────────────────
+// Everything declared as `ledger` is PUBLIC and lives on-chain.
+
+/**
+ * A trial's enrolment criteria. This is deliberately PUBLIC: sponsors publish
+ * what they require, patients prove they meet it without saying how.
+ */
+export struct TrialCriteria {
+  conditionCode: Uint<32>,
+  minAge: Uint<8>,
+  maxAge: Uint<8>,
+}
+
+/** Number of eligibility checks ever performed against this contract. */
+export ledger checksPerformed: Counter;
+
+/** Registry of open trials, keyed by trial id. Public. */
+export ledger trials: Map<Uint<32>, TrialCriteria>;
+
+/**
+ * Commitments to patient records that a trusted issuer (clinic/EHR) has
+ * attested. A commitment is a blinded hash: it reveals nothing about the
+ * underlying diagnosis, age or medication.
+ */
+export ledger attestedRecords: Set<Bytes<32>>;
+
+/**
+ * The only thing an eligibility check ever writes: a per-(patient, trial)
+ * nullifier mapped to the boolean outcome. No health fact is stored here.
+ */
+export ledger eligibilityResults: Map<Bytes<32>, Boolean>;
+
+// ── Private witness state ──────────────────────────────────────────────
+// Witnesses are TypeScript callbacks that supply PRIVATE facts. Their values
+// are known only to the prover and never appear on-chain unless explicitly
+// wrapped in disclose().
+
+/** The patient's diagnosis, as a coded condition identifier. */
+witness patientDiagnosis(): Uint<32>;
+
+/** The patient's age in years. */
+witness patientAge(): Uint<8>;
+
+/** Whether the patient currently takes a medication that excludes them. */
+witness patientOnExcludedMedication(): Boolean;
+
+/** Blinding factor tying the patient's facts to their issuer attestation. */
+witness patientRecordNonce(): Bytes<32>;
+
+/** The patient's long-lived secret, used to derive per-trial nullifiers. */
+witness patientSecretKey(): Bytes<32>;
+
+// ── Circuits ───────────────────────────────────────────────────────────
+
+/** Skeleton circuit: proves the toolchain end-to-end before real logic. */
+export circuit ping(): [] {
+  checksPerformed.increment(1);
+}
+
+/**
+ * Blinded commitment to a full patient record. Pure, so the issuer and the
+ * tests can compute the identical value off-chain via `pureCircuits`.
+ */
+export pure circuit recordCommitment(
+  diagnosis: Uint<32>,
+  age: Uint<8>,
+  onExcludedMedication: Boolean,
+  nonce: Bytes<32>,
+): Bytes<32> {
+  return persistentCommit<Vector<4, Bytes<32>>>(
+    [
+      pad(32, "aegis:record:v1"),
+      diagnosis as Field as Bytes<32>,
+      age as Field as Bytes<32>,
+      onExcludedMedication as Field as Bytes<32>,
+    ],
+    nonce,
+  );
+}
+
+/** Per-(patient, trial) nullifier: stable for one trial, unlinkable across trials. */
+export pure circuit trialNullifier(secretKey: Bytes<32>, trialId: Uint<32>): Bytes<32> {
+  return persistentHash<Vector<3, Bytes<32>>>([
+    pad(32, "aegis:nullifier:v1"),
+    secretKey,
+    trialId as Field as Bytes<32>,
+  ]);
+}
+
+/** Issuer-side: attest that a (blinded) patient record is genuine. */
+export circuit attestPatientRecord(commitment: Bytes<32>): [] {
+  attestedRecords.insert(disclose(commitment));
+}
+
+/** Sponsor-side: publish a trial's criteria on the public ledger. */
+export circuit registerTrial(trialId: Uint<32>, criteria: TrialCriteria): [] {
+  trials.insert(disclose(trialId), disclose(criteria));
+}
+
+/** Proves the caller meets a trial's criteria without revealing why. */
+export circuit checkTrialEligibility(trialId: Uint<32>): [] {
+  const criteria = trials.lookup(disclose(trialId));
+
+  // --- PRIVATE: these values exist only inside the proof. ---
+  const diagnosis = patientDiagnosis();
+  const age = patientAge();
+  const onExcluded = patientOnExcludedMedication();
+  const nonce = patientRecordNonce();
+  const secretKey = patientSecretKey();
+
+  // Trust check (Wave 1, simplified): the facts must hash to a record the
+  // issuer already attested. A patient cannot invent their own health data.
+  const commitment = recordCommitment(diagnosis, age, onExcluded, nonce);
+  assert(attestedRecords.member(disclose(commitment)), "no issuer attestation for these facts");
+
+  // Eligibility predicates. Failing any of these makes the proof unsatisfiable,
+  // so an ineligible patient simply cannot produce a transaction.
+  assert(diagnosis == criteria.conditionCode, "diagnosis does not match trial condition");
+  assert(age >= criteria.minAge, "patient is below the trial's minimum age");
+  assert(age <= criteria.maxAge, "patient is above the trial's maximum age");
+  assert(!onExcluded, "patient takes a medication that excludes them from this trial");
+
+  // Anti-replay: one proof per patient per trial.
+  const nullifier = trialNullifier(secretKey, trialId);
+  assert(!eligibilityResults.member(disclose(nullifier)), "eligibility already proven for this trial");
+
+  // --- PUBLIC: the ONLY things that reach the ledger. ---
+  eligibilityResults.insert(disclose(nullifier), true);
+  checksPerformed.increment(1);
+}
