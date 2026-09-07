@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'motion/react';
+import { Link } from 'react-router-dom';
 
-import { ACTIVE_DEPLOYMENT } from '../deployment';
+import { ACTIVE_DEPLOYMENT, HIDDEN_LOCAL_DEPLOYMENT } from '../deployment';
 import { useChain } from '../chain/ChainProvider';
 import { ActivityFeed } from '../components/ActivityFeed';
 
@@ -65,11 +66,26 @@ export function LedgerView() {
         <div className="banner">
           <span>ℹ</span>
           <div>
-            <strong>No deployment record found.</strong>
-            <br />
-            Deploy the contract with <code>yarn deploy:local</code>{' '}
-            and this page will populate from chain. Until then the eligibility
-            checker still works — it runs the real circuit locally.
+            {HIDDEN_LOCAL_DEPLOYMENT ? (
+              <>
+                <strong>This hosted build has no chain to read.</strong>
+                <br />
+                The contract is deployed to a local Midnight devnet, which by
+                definition only exists on the machine running it — so this page
+                is empty here and full when you run the project yourself. The{' '}
+                <Link to="/prove">eligibility checker</Link> works regardless:
+                it executes the real compiled circuit in your browser, and that
+                is the part worth seeing.
+              </>
+            ) : (
+              <>
+                <strong>No deployment record found.</strong>
+                <br />
+                Deploy the contract with <code>yarn deploy:local</code> and this
+                page will populate from chain. Until then the eligibility
+                checker still works — it runs the real circuit locally.
+              </>
+            )}
           </div>
         </div>
       )}

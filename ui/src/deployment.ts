@@ -11,7 +11,33 @@ const records = import.meta.glob('../../deployments/*.json', {
   eager: true,
 }) as Record<string, { default: DeploymentInfo }>;
 
-export const DEPLOYMENTS: DeploymentInfo[] = Object.values(records).map((m) => m.default);
+const isLoopback = (url: string): boolean =>
+  /^[a-z]+:\/\/(localhost|127\.0\.0\.1|\[::1\])(:|\/|$)/i.test(url);
+
+const servedLocally =
+  typeof window === 'undefined' ||
+  ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname);
+
+/**
+ * Deployment records this browser can actually reach.
+ *
+ * A devnet record points at 127.0.0.1. Served from a public host that is worse
+ * than useless: the page would be asking the *visitor's* machine for a chain
+ * they are not running, which a browser blocks as mixed content anyway and
+ * which amounts to probing their local ports. So drop loopback records unless
+ * the page itself is being served locally.
+ *
+ * What remains is the honest state — no reachable deployment — which the
+ * interface already handles: trial criteria fall back to fixtures and the
+ * eligibility checker still runs the real compiled circuit locally.
+ */
+export const DEPLOYMENTS: DeploymentInfo[] = Object.values(records)
+  .map((m) => m.default)
+  .filter((d) => servedLocally || !isLoopback(d.indexer));
+
+/** True when a devnet record was hidden because this page is hosted remotely. */
+export const HIDDEN_LOCAL_DEPLOYMENT =
+  !servedLocally && Object.values(records).some((m) => isLoopback(m.default.indexer));
 
 /**
  * Preferred deployment, in order: an explicit `?network=` in the URL, then
