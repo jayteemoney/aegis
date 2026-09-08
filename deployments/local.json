@@ -1,8 +1,8 @@
 {
   "network": "local",
   "networkId": "undeployed",
-  "contractAddress": "830562e4aa4f3e5504528bf467226a2a2296fe7104411845af55fd4f908f2d1d",
-  "deployedAt": "2026-09-07T09:46:26.130Z",
+  "contractAddress": "14fee2931b281b59971e8bf24572e0b958a5e588254fedd406a5a47cf77ee9f1",
+  "deployedAt": "2026-09-07T12:04:49.806Z",
   "indexer": "http://127.0.0.1:8088/api/v4/graphql",
   "indexerWS": "ws://127.0.0.1:8088/api/v4/graphql/ws",
   "node": "http://127.0.0.1:9944",

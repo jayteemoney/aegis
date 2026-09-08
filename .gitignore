@@ -46,6 +46,11 @@ seed.txt
 wallet-seed*
 # ───────────────────────────────────────────────────────────────────────
 
+# Personal recording aid, not project documentation. Kept locally so it is at
+# hand while filming, out of the repository because it is about the filming
+# rather than about Aegis.
+/docs/demo-script.md
+
 # editor / OS
 .DS_Store
 .vscode/*
